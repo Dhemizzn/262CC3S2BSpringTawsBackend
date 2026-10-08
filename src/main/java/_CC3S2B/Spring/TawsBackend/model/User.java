@@ -15,17 +15,14 @@ import lombok.NoArgsConstructor;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column
+    @Column(name = "user_id")
     private Integer userId;
 
-    @Column
-    private String userName;
+    @Column(name = "user_name")
+    private String email;
 
     @Column(name = "password")
     private String passwordHash;
-
-    @Column
-    private String personId;
 
     @OneToOne
     @JoinColumn(name = "person_id")
