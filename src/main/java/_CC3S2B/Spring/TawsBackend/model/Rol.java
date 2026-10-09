@@ -18,8 +18,8 @@ public class Rol {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer rolId;
 
-    @Column(name = "role_name")
-    private String roleName;
+    @Column(name = "rol_name")
+    private String rolName;
 
     @Column
     private String description;

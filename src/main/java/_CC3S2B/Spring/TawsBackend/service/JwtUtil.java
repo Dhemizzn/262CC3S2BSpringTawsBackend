@@ -1,4 +1,5 @@
 package _CC3S2B.Spring.TawsBackend.service;
+import _CC3S2B.Spring.TawsBackend.model.Module;
 import _CC3S2B.Spring.TawsBackend.model.User;
 import io.jsonwebtoken.Claims; //Representa la información contenida dentro del JWT.
 import io.jsonwebtoken.Jwts; // Es la clase principal de JJWT. La utilizas para Crear tokens,Firmarlos,Parsearlos,Validarlos

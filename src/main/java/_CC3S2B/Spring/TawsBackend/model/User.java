@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
-@Table(name = "module")
+@Table(name = "app_user")
 
 public class User {
     @Id

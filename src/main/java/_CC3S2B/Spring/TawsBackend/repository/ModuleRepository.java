@@ -1,4 +1,5 @@
 package _CC3S2B.Spring.TawsBackend.repository;
+import _CC3S2B.Spring.TawsBackend.model.Module;
 
 import org.springframework.data.jpa.repository.JpaRepository; //Crear un repository para trabajar con la BD sin escribir manualmente querys.
 import org.springframework.data.jpa.repository.Query; // Te permite escribir una consulta JPQL personalizada.
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface ModuleRepository extends JpaRepository<Module, Integer> {
-    @Query("SELECT m FROM Module m JOIN RoleModule rm ON m.moduleId = rm.moduleId WHERE rm.isActive = true AND rm.roleId = :roleId")
+    Module m = null;
+    @Query("SELECT m FROM Module m JOIN RolModule rm ON m.moduleId = rm.moduleId WHERE rm.isActive = true AND rm.rolId = :roleId")
     List<Module> findByRoleId(@Param("roleId") Integer roleId);
 }

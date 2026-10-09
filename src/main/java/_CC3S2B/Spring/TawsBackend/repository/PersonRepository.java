@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface PersonRepository extends JpaRepository<Person, Integer>  {
-    boolean existsByNumDocumento(String numDocumento);
-    List<Person> findByNumDocumento(String numDocumento);
-    List<Person> findAllByOrderByIdPersonaDesc();
+    boolean existsByDni(String dni);
+    List<Person> findByDni(String dni);
 }

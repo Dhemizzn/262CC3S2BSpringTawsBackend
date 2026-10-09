@@ -3,8 +3,10 @@ package _CC3S2B.Spring.TawsBackend.service;
 import _CC3S2B.Spring.TawsBackend.dto.AuthResponseDTO;
 import _CC3S2B.Spring.TawsBackend.dto.LoginRequestDTO;
 import _CC3S2B.Spring.TawsBackend.dto.RegisterRequestDTO;
+import _CC3S2B.Spring.TawsBackend.model.Module;
 import _CC3S2B.Spring.TawsBackend.model.Person;
 import _CC3S2B.Spring.TawsBackend.model.User;
+
 import _CC3S2B.Spring.TawsBackend.repository.ModuleRepository;
 import _CC3S2B.Spring.TawsBackend.repository.PersonRepository;
 import _CC3S2B.Spring.TawsBackend.repository.RolRepository;
@@ -39,7 +41,7 @@ public class AuthService {
 
         List<Module> modules = Collections.emptyList();
         if(user.getRol()!=null){
-            modules = moduleRepository.findByRoleId(user.getRol().getRolId());
+             modules = moduleRepository.findByRoleId(user.getRol().getRolId());
         }
         var token = jwtService.generateToken(user,modules);
         return AuthResponseDTO.builder().token(token).build();
@@ -48,7 +50,7 @@ public class AuthService {
     public AuthResponseDTO register(RegisterRequestDTO request){
         if(userRepository.existsByEmail(request.getEmail()))
             throw new IllegalArgumentException("Correo ya registrado");
-        if(personRepository.existsByNumDocumento(request.getDni()))
+        if(personRepository.existsByDni(request.getDni()))
             throw new IllegalArgumentException("Dni ya registrado");
         Person person = Person.builder()
                 .firstName(request.getFirstName())
@@ -65,7 +67,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(generatePassword()))
                 .person(person)
-                .rol(rolRepository.findbyId(1))
+                .rol(rolRepository.findById(2).orElse(null))
                 .build();
         userRepository.save(user);
 
@@ -78,5 +80,4 @@ public class AuthService {
                 .toString()
                 .substring(0, 12);
     }
-
 }

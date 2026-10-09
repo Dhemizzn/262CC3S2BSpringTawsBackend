@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @IdClass(RolModuleId.class)
-@Table(name = "role_module")
+@Table(name = "rol_module")
 public class RolModule {
     @Id
     @Column(name = "rol_id")
@@ -40,5 +40,5 @@ public class RolModule {
 @AllArgsConstructor
 class RolModuleId implements Serializable {
     private Integer rolId;
-    private Integer idMod;
+    private Integer moduleId;
 }
