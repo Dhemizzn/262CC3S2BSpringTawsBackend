@@ -26,7 +26,11 @@ public class JwtUtil {
         Map<String,Object> claims = new HashMap<>();
         claims.put("personId",user.getPerson().getPersonId());
         claims.put("email",user.getEmail());
-        claims.put("names",user.getPerson().getFirstName() + user.getPerson().getMaternalSurname() + user.getPerson().getPaternalSurname());
+        claims.put("names",
+                user.getPerson().getFirstName() + " " +
+                        user.getPerson().getPaternalSurname() + " " +
+                        user.getPerson().getMaternalSurname()
+        );
         claims.put("rol",user.getRol());
         claims.put("modules",modules);
 
