@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class QuoteResponseDTO {
 
-    private Long id;
+    private String id;
     private String departureCity;
     private String destination;
     private Integer passengerCount;

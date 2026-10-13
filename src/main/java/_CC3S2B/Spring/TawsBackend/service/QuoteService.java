@@ -7,6 +7,8 @@ import _CC3S2B.Spring.TawsBackend.repository.QuoteRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -21,25 +23,32 @@ public class QuoteService {
         }
 
         QuoteRequest quoteRequest = QuoteRequest.builder()
-                .departureCity(dto.getDepartureCity())
-                .destination(dto.getDestination())
-                .passengerCount(dto.getPassengerCount())
-                .departureDate(dto.getDepartureDate())
-                .returnDate(dto.getReturnDate())
-                .status("PENDING")
+                .departureRegion(dto.getDepartureCity())
+                .destinationRegion(dto.getDestination())
+                .peopleQuantity(dto.getPassengerCount())
+                .departureDate(dto.getDepartureDate().toLocalDate())
+                .departureTime(dto.getDepartureDate().toLocalTime())
+                .returnDate(dto.getReturnDate().toLocalDate())
+                .returnTime(dto.getReturnDate().toLocalTime())
+                .status("pending")
+                .total(BigDecimal.ZERO)
                 .build();
 
-        QuoteRequest savedQuote = quoteRequestRepository.save(quoteRequest);
+        QuoteRequest savedQuote = quoteRequestRepository.saveAndFlush(quoteRequest);
+
+        String responseId = savedQuote.getQuotationId() != null
+                ? savedQuote.getQuotationId()
+                : String.valueOf(savedQuote.getNumId());
 
         return QuoteResponseDTO.builder()
-                .id(savedQuote.getId())
-                .departureCity(savedQuote.getDepartureCity())
-                .destination(savedQuote.getDestination())
-                .passengerCount(savedQuote.getPassengerCount())
-                .departureDate(savedQuote.getDepartureDate())
-                .returnDate(savedQuote.getReturnDate())
+                .id(responseId)
+                .departureCity(savedQuote.getDepartureRegion())
+                .destination(savedQuote.getDestinationRegion())
+                .passengerCount(savedQuote.getPeopleQuantity())
+                .departureDate(LocalDateTime.of(savedQuote.getDepartureDate(), savedQuote.getDepartureTime()))
+                .returnDate(LocalDateTime.of(savedQuote.getReturnDate(), savedQuote.getReturnTime()))
                 .status(savedQuote.getStatus())
-                .createdAt(savedQuote.getCreatedAt())
+                .createdAt(LocalDateTime.now())
                 .message("Solicitud de cotización registrada con éxito")
                 .build();
     }

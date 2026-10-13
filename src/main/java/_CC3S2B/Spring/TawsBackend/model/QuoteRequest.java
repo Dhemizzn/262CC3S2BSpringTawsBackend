@@ -6,46 +6,51 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "quote_requests")
+@Table(name = "quotation", schema = "taws")
 public class QuoteRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "num_id")
+    private Long numId;
 
-    @Column(name = "departure_city", nullable = false)
-    private String departureCity;
+    @Column(name = "quotation_id", insertable = false, updatable = false)
+    private String quotationId;
 
-    @Column(name = "destination", nullable = false)
-    private String destination;
+    @Column(name = "status", length = 10, nullable = false)
+    @Builder.Default
+    private String status = "pending";
 
-    @Column(name = "passenger_count", nullable = false)
-    private Integer passengerCount;
+    @Column(name = "people_quantity", nullable = false)
+    private Integer peopleQuantity;
+
+    @Column(name = "departure_region", length = 50, nullable = false)
+    private String departureRegion;
+
+    @Column(name = "destination_region", length = 50, nullable = false)
+    private String destinationRegion;
 
     @Column(name = "departure_date", nullable = false)
-    private LocalDateTime departureDate;
+    private LocalDate departureDate;
+
+    @Column(name = "departure_time")
+    private LocalTime departureTime;
 
     @Column(name = "return_date", nullable = false)
-    private LocalDateTime returnDate;
+    private LocalDate returnDate;
 
-    @Column(name = "status", nullable = false)
-    private String status; // "PENDING", "GENERATED", "CANCELLED"
+    @Column(name = "return_time")
+    private LocalTime returnTime;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        if (this.status == null) {
-            this.status = "PENDING";
-        }
-    }
+    @Column(name = "total")
+    private BigDecimal total;
 }
