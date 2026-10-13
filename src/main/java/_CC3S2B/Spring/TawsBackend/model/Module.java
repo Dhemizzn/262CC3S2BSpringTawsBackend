@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
-@Table(name = "Rol")
-
+@Table(name = "module")
 public class Module {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +22,4 @@ public class Module {
 
     @Column(name = "url_path")
     private String urlPath;
-
-
 }

@@ -63,9 +63,13 @@ public class AuthService {
                 .build();
         personRepository.save(person);
 
+        String temporaryPassword = generatePassword();
+        System.out.println("Contraseña temporal: " + temporaryPassword);
+        String hashedPassword = passwordEncoder.encode(temporaryPassword);
+
         User user = User.builder()
                 .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(generatePassword()))
+                .passwordHash(hashedPassword)
                 .person(person)
                 .rol(rolRepository.findById(2).orElse(null))
                 .build();
