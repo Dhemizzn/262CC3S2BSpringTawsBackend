@@ -29,9 +29,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Bad Request")
-                .message(ex.getMessage() != null
-                        ? ex.getMessage()
-                        : "Datos invalidos")
+                .message(ex.getMessage() != null ? ex.getMessage() : "Datos invalidos")
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

@@ -5,8 +5,8 @@ import _CC3S2B.Spring.TawsBackend.dto.LoginRequestDTO;
 import _CC3S2B.Spring.TawsBackend.dto.RegisterRequestDTO;
 import _CC3S2B.Spring.TawsBackend.model.Module;
 import _CC3S2B.Spring.TawsBackend.model.Person;
-import _CC3S2B.Spring.TawsBackend.model.User;
 
+import _CC3S2B.Spring.TawsBackend.model.User;
 import _CC3S2B.Spring.TawsBackend.repository.ModuleRepository;
 import _CC3S2B.Spring.TawsBackend.repository.PersonRepository;
 import _CC3S2B.Spring.TawsBackend.repository.RolRepository;
