@@ -15,4 +15,4 @@ public record QuoteRequest(
         LocalDate departureDate,
         @NotNull
         LocalDate returnDate
-) {}
+){}

@@ -3,6 +3,7 @@ package _CC3S2B.Spring.TawsBackend.service;
 import _CC3S2B.Spring.TawsBackend.dto.*;
 import _CC3S2B.Spring.TawsBackend.model.*;
 import _CC3S2B.Spring.TawsBackend.repository.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 
 @Service
+@RequiredArgsConstructor
 public class QuotationService {
 
  private final DestinationRepository destinations;
@@ -22,19 +24,6 @@ public class QuotationService {
  private final HotelRepository hotels;
  private final QuoteActivityRepository activities;
  private final ConfirmedPackageRepository confirmations;
-
- public QuotationService(
-         DestinationRepository d,
-         AirplaneRepository a,
-         HotelRepository h,
-         QuoteActivityRepository ac,
-         ConfirmedPackageRepository c) {
-  this.destinations = d;
-  this.airplanes = a;
-  this.hotels = h;
-  this.activities = ac;
-  this.confirmations = c;
- }
 
  public List<Destination> destinations() {
   return destinations.findAllByOrderByNameAsc();
@@ -100,7 +89,6 @@ public class QuotationService {
     if (days != 1) starts = LocalTime.of(13, 0);
     LocalTime ends = starts.plusMinutes(a.getDurationMinutes());
 
-    // Evitamos que una actividad termine después de la salida del vuelo de regreso.
     if (a.getDurationMinutes() > 420 || ends.isBefore(starts) || ends.isAfter(LocalTime.of(20, 0))) {
      valid = false;
      break;
@@ -151,7 +139,7 @@ public class QuotationService {
  @Transactional(readOnly = true)
  public ConfirmedView detail(String packageId, Integer userId) {
   return confirmations.findPackage(packageId, userId);
- }
+}
 
  @Transactional(readOnly = true)
  public List<MyPackageView> mine(Integer userId) {
