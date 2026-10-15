@@ -1,9 +1,12 @@
 package _CC3S2B.Spring.TawsBackend.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.math.BigDecimal;
 
 @Entity
+@Data
 @Table(name = "airplane")
 public class Airplane {
 
@@ -20,22 +23,4 @@ public class Airplane {
 
  @Column(name = "round_trip_price")
  private BigDecimal roundTripPrice;
-
- protected Airplane() {}
-
- public Integer getAirplaneId() {
-  return airplaneId;
- }
-
- public Integer getDestinationId() {
-  return destinationId;
- }
-
- public String getAirline() {
-  return airline;
- }
-
- public BigDecimal getRoundTripPrice() {
-  return roundTripPrice;
- }
 }

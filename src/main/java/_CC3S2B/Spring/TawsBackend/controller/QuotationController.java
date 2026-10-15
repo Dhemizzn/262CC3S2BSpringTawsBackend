@@ -21,21 +21,13 @@ public class QuotationController {
 
     private final QuotationService quotationService;
 
-    @GetMapping("/destinations")
-    public List<DestinationOption> destinations() {
-        return quotationService.destinations().stream()
-                .map(d -> new DestinationOption(d.getDestinationId(), d.getName()))
-                .toList();
-    }
-
     @PostMapping("/generate")
     public List<QuoteResponse> generate(@Valid @RequestBody QuoteRequest request) {
         return quotationService.generate(request);
     }
 
     @PostMapping("/confirm")
-    public Map<String, String> confirm(@RequestBody QuoteResponse selected,
-                                       Authentication authentication) {
+    public Map<String, String> confirm(@RequestBody QuoteResponse selected, Authentication authentication) {
         Integer userId = authenticated(authentication);
         String quotationId = quotationService.confirm(selected, userId);
         return Map.of(
@@ -46,12 +38,9 @@ public class QuotationController {
     }
 
     private Integer authenticated(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()
-                || !(authentication.getPrincipal() instanceof User user)) {
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof User user)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Inicia sesion");
         }
         return user.getUserId();
     }
-
-    public record DestinationOption(Integer id, String name) {}
 }

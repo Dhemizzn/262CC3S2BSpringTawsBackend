@@ -1,8 +1,10 @@
 package _CC3S2B.Spring.TawsBackend.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "destination")
 public class Destination {
 
@@ -13,14 +15,4 @@ public class Destination {
 
  @Column(name = "name")
  private String name;
-
- protected Destination() {}
-
- public Integer getDestinationId() {
-  return destinationId;
- }
-
- public String getName() {
-  return name;
- }
 }

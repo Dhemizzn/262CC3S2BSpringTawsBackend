@@ -3,7 +3,6 @@ package _CC3S2B.Spring.TawsBackend.service;
 import _CC3S2B.Spring.TawsBackend.dto.*;
 import _CC3S2B.Spring.TawsBackend.model.*;
 import _CC3S2B.Spring.TawsBackend.repository.*;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,10 +28,8 @@ public class QuotationService {
     private final HotelRepository hotels;
     private final QuoteActivityRepository activities;
     private final QuotationRepository quotations;
-    private final EntityManager entityManager;
     private final JsonMapper jsonMapper;
 
-    @Transactional(readOnly = true)
     public List<Destination> destinations() {
         return destinations.findAllByOrderByNameAsc();
     }
@@ -68,10 +65,8 @@ public class QuotationService {
             if (!seen.add(fingerprint)) continue;
 
             try {
-                result.add(buildQuote(UUID.randomUUID(), request, days,
-                        hotel, airplane, chosen));
+                result.add(buildQuote(UUID.randomUUID(), request, days, hotel, airplane, chosen));
             } catch (IllegalArgumentException ignored) {
-                // La duracion excede las horas disponibles: probar otra combinacion.
             }
         }
 
@@ -130,8 +125,7 @@ public class QuotationService {
             chosen.add(activity);
         }
 
-        QuoteRequest request = new QuoteRequest(selected.departureCity(), destination.getName(),
-                selected.passengerCount(), selected.departureDate(), selected.returnDate());
+        QuoteRequest request = new QuoteRequest(selected.departureCity(), destination.getName(), selected.passengerCount(), selected.departureDate(), selected.returnDate());
         QuoteResponse canonical;
         try {
             canonical = buildQuote(
@@ -160,13 +154,12 @@ public class QuotationService {
             throw new IllegalStateException("No se pudo serializar el itinerario", e);
         }
 
-        quotations.saveAndFlush(quotation);
-        // Traer quotation_id que Neon calcula desde num_id automaticamente.
-        entityManager.refresh(quotation);
-        if (quotation.getQuotationId() == null) {
+        Quotation saved = quotations.saveAndFlush(quotation);
+        String quotationId = quotations.findGeneratedQuotationId(saved.getNumId());
+        if (quotationId == null) {
             throw new IllegalStateException("Neon no devolvio quotation_id");
         }
-        return quotation.getQuotationId();
+        return quotationId;
     }
 
     private QuoteResponse buildQuote(UUID proposalId, QuoteRequest r, int days,

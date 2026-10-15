@@ -75,7 +75,13 @@ public class AuthService {
                 .build();
         userRepository.save(user);
 
-        var token = jwtService.generateToken(user,Collections.emptyList());
+        List<Module> modules = Collections.emptyList();
+
+        if (user.getRol() != null) {
+            modules = moduleRepository.findByRoleId(user.getRol().getRolId());
+        }
+
+        var token = jwtService.generateToken(user,modules);
         return AuthResponseDTO.builder().token(token).build();
     }
 

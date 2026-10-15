@@ -28,13 +28,12 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/quotes/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception  //Permite configurar cómo Spring Security responde ante determinados errores de seguridad.
+                .exceptionHandling(exception -> exception  //Permite configu0rar cómo Spring Security responde ante determinados errores de seguridad.
                         //define cómo responder cuando se necesita autenticación y el usuario no está autenticado correctamente.
                         //Authexception,la excepción relacionada con la necesidad de autenticación.
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -54,7 +53,6 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);//Esta instrucción construye y devuelve el objeto SecurityFilterChain con las configuraciones que definiste anteriormente.
         return http.build();
     }
-
     @Bean //un objeto que Spring administra y que puede inyectar en otras clases
     public PasswordEncoder passwordEncoder()  { //es una interfaz de Spring Security que define operaciones para codificar contraseñas y comprobar si una contraseña coincide con su versión codificada
         return new BCryptPasswordEncoder(); //BCrypt permite almacenar las contraseñas mediante hashes, evitando guardar las contraseñas originales en texto plano.
