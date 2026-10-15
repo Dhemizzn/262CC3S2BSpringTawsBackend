@@ -31,19 +31,4 @@ public class AuthController {
             @RequestBody RegisterRequestDTO request) {
         return authService.register(request);
     }
-
-    @GetMapping("/me")
-    public Map<String, Object> me() {
-        Authentication auth =
-                SecurityContextHolder.getContext()
-                        .getAuthentication();
-
-        User user = (User) auth.getPrincipal();
-
-        return Map.of(
-                "userId", user.getUserId(),
-                "email", user.getEmail(),
-                "authenticated", auth.isAuthenticated()
-        );
-    }
 }
