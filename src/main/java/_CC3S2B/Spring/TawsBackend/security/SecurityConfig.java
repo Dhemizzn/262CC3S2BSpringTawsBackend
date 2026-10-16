@@ -1,6 +1,8 @@
 package _CC3S2B.Spring.TawsBackend.security;
 
 
+import _CC3S2B.Spring.TawsBackend.util.ErrorResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,12 +17,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
@@ -33,21 +37,18 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception  //Permite configu0rar cómo Spring Security responde ante determinados errores de seguridad.
-                        //define cómo responder cuando se necesita autenticación y el usuario no está autenticado correctamente.
-                        //Authexception,la excepción relacionada con la necesidad de autenticación.
+                .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED); //Aquí estableces el estado HTTP de la respuesta con error 404
-                            response.setContentType("application/json;charset=UTF-8");//Le indica al cliente que el cuerpo de la respuesta será JSON y que se utilizará la codificación UTF-8.
-                            java.util.Map<String, Object> body = new java.util.HashMap<>(); //Aquí creas un mapa Java para almacenar los datos que quieres devolver al cliente.
-                            body.put("timestamp", java.time.LocalDateTime.now().toString());//LocalDateTime.now() obtiene la fecha y hora local del servidor, y toString() la convierte en texto.
-                            body.put("status", 401);//Añade el código HTTP al JSON para que el frontend pueda identificar el tipo de error.
-                            body.put("error", "Unauthorized");//Añade una descripción breve del error.
-                            body.put("message", "Acceso no autorizado. Debe proporcionar un token válido.");//Añade un mensaje que explica al cliente por qué no puede acceder.
-                            new com.fasterxml.jackson.databind.ObjectMapper().writeValue(response.getOutputStream(), body);
-                            //crea un objeto ObjectMapper, una clase de Jackson que permite convertir objetos Java a JSON y viceversa.
-                            //writeValue(), que serializa el mapa body a JSON y escribe el resultado directamente en el flujo de salida de la respuesta HTTP.
-                            //permite escribir los bytes del cuerpo de la respuesta que recibirá el cliente.
+
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+
+                            ErrorResponse error = ErrorResponse.builder()
+                                    .status(401)
+                                    .error("Unauthorized")
+                                    .message("Acceso no autorizado. Debe proporcionar un token válido.")
+                                    .build();
+                            objectMapper.writeValue(response.getOutputStream(), error);
                         })
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);//Esta instrucción construye y devuelve el objeto SecurityFilterChain con las configuraciones que definiste anteriormente.

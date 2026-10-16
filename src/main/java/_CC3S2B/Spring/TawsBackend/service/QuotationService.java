@@ -3,6 +3,7 @@ package _CC3S2B.Spring.TawsBackend.service;
 import _CC3S2B.Spring.TawsBackend.dto.*;
 import _CC3S2B.Spring.TawsBackend.model.*;
 import _CC3S2B.Spring.TawsBackend.repository.*;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,10 +31,6 @@ public class QuotationService {
     private final QuotationRepository quotations;
     private final JsonMapper jsonMapper;
 
-    public List<Destination> destinations() {
-        return destinations.findAllByOrderByNameAsc();
-    }
-
     @Transactional(readOnly = true)
     public List<QuoteResponse> generate(QuoteRequest request) {
         int days = validateDates(request.departureDate(), request.returnDate());
@@ -60,42 +57,41 @@ public class QuotationService {
             List<QuoteActivity> chosen = shuffled.subList(0, required);
 
             String fingerprint = hotel.getHotelId() + ":" + airplane.getAirplaneId() + ":" +
-                    chosen.stream().map(a -> a.getActivityId().toString())
-                            .sorted().collect(Collectors.joining(","));
+                    chosen.stream().map(a -> a.getActivityId().toString()).sorted().collect(Collectors.joining(","));
+
             if (!seen.add(fingerprint)) continue;
 
             try {
                 result.add(buildQuote(UUID.randomUUID(), request, days, hotel, airplane, chosen));
-            } catch (IllegalArgumentException ignored) {
-            }
+            } catch (IllegalArgumentException ignored) {}
         }
 
         if (result.isEmpty()) {
-            throw error(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "No es posible organizar las actividades antes del vuelo de retorno");
+            throw error(HttpStatus.UNPROCESSABLE_ENTITY, "No es posible organizar las actividades antes del vuelo de retorno");
         }
+
         return result;
     }
 
     @Transactional
     public String confirm(QuoteResponse selected, Integer userId) {
-        if (userId == null || selected == null || selected.hotel() == null
-                || selected.airplane() == null || selected.activities() == null) {
+        if (userId == null || selected == null || selected.hotel() == null || selected.airplane() == null || selected.activities() == null) {
             throw error(HttpStatus.BAD_REQUEST, "Cotizacion incompleta");
         }
 
         int days = validateDates(selected.departureDate(), selected.returnDate());
         validateRoute(selected.departureCity(), selected.destination(), selected.passengerCount());
+
         Destination destination = findDestination(selected.destination());
         int destinationId = destination.getDestinationId();
 
         Hotel hotel = hotels.findById(requiredId(selected.hotel().id()))
                 .orElseThrow(() -> error(HttpStatus.BAD_REQUEST, "Hotel inexistente"));
+
         Airplane airplane = airplanes.findById(requiredId(selected.airplane().id()))
                 .orElseThrow(() -> error(HttpStatus.BAD_REQUEST, "Avion inexistente"));
 
-        if (!Objects.equals(hotel.getDestinationId(), destinationId)
-                || !Objects.equals(airplane.getDestinationId(), destinationId)) {
+        if (!Objects.equals(hotel.getDestinationId(), destinationId) || !Objects.equals(airplane.getDestinationId(), destinationId)) {
             throw error(HttpStatus.BAD_REQUEST, "Hotel o avion no pertenece al destino");
         }
 
@@ -106,9 +102,12 @@ public class QuotationService {
 
         List<Integer> ids = new ArrayList<>();
         for (ActivityView view : selected.activities()) {
-            if (view == null) throw error(HttpStatus.BAD_REQUEST, "Actividad invalida");
+            if (view == null) {
+                throw error(HttpStatus.BAD_REQUEST, "Actividad invalida");
+            }
             ids.add(requiredId(view.id()));
         }
+
         if (new HashSet<>(ids).size() != ids.size()) {
             throw error(HttpStatus.BAD_REQUEST, "No se permiten actividades repetidas");
         }
@@ -125,7 +124,14 @@ public class QuotationService {
             chosen.add(activity);
         }
 
-        QuoteRequest request = new QuoteRequest(selected.departureCity(), destination.getName(), selected.passengerCount(), selected.departureDate(), selected.returnDate());
+        QuoteRequest request = QuoteRequest.builder()
+                .departureCity(selected.departureCity())
+                .destination(destination.getName())
+                .passengerCount(selected.passengerCount())
+                .departureDate(selected.departureDate())
+                .returnDate(selected.returnDate())
+                .build();
+
         QuoteResponse canonical;
         try {
             canonical = buildQuote(
@@ -136,17 +142,18 @@ public class QuotationService {
             throw error(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
-        Quotation quotation = new Quotation();
-        quotation.setStatus("pending");
-        quotation.setPeopleQuantity(canonical.passengerCount());
-        quotation.setDepartureRegion(canonical.departureCity());
-        quotation.setDestinationRegion(canonical.destination());
-        quotation.setDepartureDate(canonical.departureDate());
-        quotation.setReturnDate(canonical.returnDate());
-        quotation.setDepartureTime(LocalTime.of(8, 0));
-        quotation.setReturnTime(LocalTime.of(20, 0));
-        quotation.setTotal(canonical.totalPrice());
-        quotation.setAppUserId(userId);
+        Quotation quotation = Quotation.builder()
+                .status("pending")
+                .peopleQuantity(canonical.passengerCount())
+                .departureRegion(canonical.departureCity())
+                .destinationRegion(canonical.destination())
+                .departureDate(canonical.departureDate())
+                .returnDate(canonical.returnDate())
+                .departureTime(LocalTime.of(8, 0))
+                .returnTime(LocalTime.of(20, 0))
+                .total(canonical.totalPrice())
+                .appUserId(userId)
+                .build();
 
         try {
             quotation.setItinerary(jsonMapper.writeValueAsString(canonical));
@@ -156,53 +163,90 @@ public class QuotationService {
 
         Quotation saved = quotations.saveAndFlush(quotation);
         String quotationId = quotations.findGeneratedQuotationId(saved.getNumId());
+
         if (quotationId == null) {
             throw new IllegalStateException("Neon no devolvio quotation_id");
         }
+
         return quotationId;
     }
 
-    private QuoteResponse buildQuote(UUID proposalId, QuoteRequest r, int days,
-                                     Hotel hotel, Airplane airplane,
-                                     List<QuoteActivity> chosen) {
+    private QuoteResponse buildQuote(UUID proposalId, QuoteRequest r, int days, Hotel hotel, Airplane airplane, List<QuoteActivity> chosen) {
         int people = r.passengerCount();
         int rooms = (people + 1) / 2;
         int nights = days - 1;
+
         LocalTime start = LocalTime.of(13, 0);
         List<ActivityView> itinerary = new ArrayList<>();
 
         for (int i = 0; i < chosen.size(); i++) {
             QuoteActivity activity = chosen.get(i);
             if (days != 1) start = LocalTime.of(13, 0);
+
             int duration = activity.getDurationMinutes();
             if (duration <= 0 || duration > 420) {
                 throw new IllegalArgumentException("Duracion de actividad fuera del horario permitido");
             }
+
             LocalTime end = start.plusMinutes(duration);
             if (!end.isAfter(start) || end.isAfter(LocalTime.of(20, 0))) {
                 throw new IllegalArgumentException("Actividad termina despues del vuelo de retorno");
             }
+
             LocalDate date = r.departureDate().plusDays(days == 1 ? 0 : i);
-            itinerary.add(new ActivityView(activity.getActivityId(), activity.getName(), date,
-                    start, end, duration, activity.getPricePerPerson()));
+
+            ActivityView activityView = ActivityView.builder()
+                    .id(activity.getActivityId())
+                    .name(activity.getName())
+                    .date(date)
+                    .startTime(start)
+                    .endTime(end)
+                    .durationMinutes(duration)
+                    .pricePerPerson(activity.getPricePerPerson())
+                    .build();
+
+            itinerary.add(activityView);
             start = end;
         }
 
         BigDecimal flightPrice = airplane.getRoundTripPrice().multiply(BigDecimal.valueOf(people));
-        BigDecimal hotelPrice = hotel.getPricePerNight()
-                .multiply(BigDecimal.valueOf((long) nights * rooms));
+        BigDecimal hotelPrice = hotel.getPricePerNight().multiply(BigDecimal.valueOf((long) nights * rooms));
         BigDecimal activitiesPrice = chosen.stream()
                 .map(QuoteActivity::getPricePerPerson)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .multiply(BigDecimal.valueOf(people));
+
         BigDecimal total = flightPrice.add(hotelPrice).add(activitiesPrice);
 
-        return new QuoteResponse(proposalId, r.departureCity().trim(), r.destination().trim(),
-                people, r.departureDate(), r.returnDate(), days,
-                new HotelView(hotel.getHotelId(), hotel.getName(), hotel.getPricePerNight(), rooms, nights),
-                new AirplaneView(airplane.getAirplaneId(), airplane.getAirline(),
-                        airplane.getRoundTripPrice(), LocalTime.of(8, 0), LocalTime.of(20, 0)),
-                itinerary, total);
+        HotelView hotelView = HotelView.builder()
+                .id(hotel.getHotelId())
+                .name(hotel.getName())
+                .pricePerNight(hotel.getPricePerNight())
+                .rooms(rooms)
+                .nights(nights)
+                .build();
+
+        AirplaneView airplaneView = AirplaneView.builder()
+                .id(airplane.getAirplaneId())
+                .airline(airplane.getAirline())
+                .roundTripPricePerPerson(airplane.getRoundTripPrice())
+                .outboundTime(LocalTime.of(8, 0))
+                .returnTime(LocalTime.of(20, 0))
+                .build();
+
+        return QuoteResponse.builder()
+                .proposalId(proposalId)
+                .departureCity(r.departureCity().trim())
+                .destination(r.destination().trim())
+                .passengerCount(people)
+                .departureDate(r.departureDate())
+                .returnDate(r.returnDate())
+                .days(days)
+                .hotel(hotelView)
+                .airplane(airplaneView)
+                .activities(itinerary)
+                .totalPrice(total)
+                .build();
     }
 
     private Destination findDestination(String name) {
@@ -213,28 +257,33 @@ public class QuotationService {
     }
 
     private int validateDates(LocalDate departure, LocalDate arrival) {
-        if (departure == null || arrival == null || departure.isBefore(LocalDate.now())
-                || arrival.isBefore(departure)) {
+        if (departure == null || arrival == null || departure.isBefore(LocalDate.now()) || arrival.isBefore(departure)) {
             throw error(HttpStatus.BAD_REQUEST, "Fechas invalidas");
         }
+
         long count = ChronoUnit.DAYS.between(departure, arrival) + 1;
-        if (count > 30) throw error(HttpStatus.BAD_REQUEST, "Maximo 30 dias");
+        if (count > 30) {
+            throw error(HttpStatus.BAD_REQUEST, "Maximo 30 dias");
+        }
+
         return (int) count;
     }
 
     private void validateRoute(String origin, String destination, Integer people) {
         if (origin == null || origin.isBlank() || destination == null || destination.isBlank()
-                || origin.trim().equalsIgnoreCase(destination.trim())
-                || people == null || people < 1 || people > 100) {
+                || origin.trim().equalsIgnoreCase(destination.trim()) || people == null || people < 1 || people > 10) {
             throw error(HttpStatus.BAD_REQUEST, "Origen, destino o pasajeros invalidos");
         }
+
         if (origin.length() > 50 || destination.length() > 50) {
             throw error(HttpStatus.BAD_REQUEST, "Origen o destino demasiado largo");
         }
     }
 
     private Integer requiredId(Integer id) {
-        if (id == null || id < 1) throw error(HttpStatus.BAD_REQUEST, "ID de servicio invalido");
+        if (id == null || id < 1) {
+            throw error(HttpStatus.BAD_REQUEST, "ID de servicio invalido");
+        }
         return id;
     }
 

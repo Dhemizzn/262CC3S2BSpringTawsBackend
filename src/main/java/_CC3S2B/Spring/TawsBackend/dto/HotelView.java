@@ -1,7 +1,9 @@
 package _CC3S2B.Spring.TawsBackend.dto;
 
-import java.math.BigDecimal;
+import lombok.Builder;
 
+import java.math.BigDecimal;
+@Builder
 public record HotelView(
         Integer id,
         String name,

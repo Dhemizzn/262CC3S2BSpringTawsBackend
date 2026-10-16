@@ -13,7 +13,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)//Es una referencia al tipo de excepción BadCredentialsException, que pertenece a Spring Security.
     //Se utiliza cuando las credenciales proporcionadas no son válidas.
     public ResponseEntity<ErrorResponse> handleAuthentication(BadCredentialsException ex) {
-
         ErrorResponse response = ErrorResponse.builder()
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .error("Unauthorized")

@@ -21,14 +21,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public AuthResponseDTO login(
-            @RequestBody LoginRequestDTO request) {
+    public AuthResponseDTO login(@RequestBody LoginRequestDTO request) {
         return authService.login(request);
     }
 
     @PostMapping("/register")
-    public AuthResponseDTO register(
-            @RequestBody RegisterRequestDTO request) {
+    public AuthResponseDTO register(@RequestBody RegisterRequestDTO request) {
         return authService.register(request);
     }
 }

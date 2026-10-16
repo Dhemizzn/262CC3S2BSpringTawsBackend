@@ -1,8 +1,10 @@
 package _CC3S2B.Spring.TawsBackend.dto;
 
 import jakarta.validation.constraints.*;
-import java.time.LocalDate;
+import lombok.Builder;
 
+import java.time.LocalDate;
+@Builder
 public record QuoteRequest(
         @NotBlank
         String departureCity,

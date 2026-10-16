@@ -1,10 +1,12 @@
 package _CC3S2B.Spring.TawsBackend.dto;
 
+import lombok.Builder;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-
+@Builder
 public record QuoteResponse(
         UUID proposalId,
         String departureCity,
