@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/quotations")
+@RequestMapping("/api/v1/quotations")
 @RequiredArgsConstructor
 public class QuotationController {
 
