@@ -42,9 +42,11 @@ public class Person {
     @Column(unique = true, nullable = false)
     String email;
 
-    @Column(name = "created_at",nullable = true, updatable = false)
+    @Builder.Default
+    @Column(name = "created_at", nullable = true, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(name = "updated_at",nullable = true )
+    @Builder.Default
+    @Column(name = "updated_at", nullable = true)
     private LocalDateTime updatedAt = LocalDateTime.now();
 }
