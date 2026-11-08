@@ -2,10 +2,12 @@ package _CC3S2B.Spring.TawsBackend.exception;
 
 import _CC3S2B.Spring.TawsBackend.util.ErrorResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice //Anotacion de Spring Boot que indica que esta clase se utilizara para maejar excepiones de Rest
 public class GlobalExceptionHandler {
@@ -45,4 +47,20 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);//
     }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatus(
+            ResponseStatusException ex
+    ) {
+        HttpStatusCode status = ex.getStatusCode();
+
+        ErrorResponse response = ErrorResponse.builder()
+                .status(status.value())
+                .error(status.toString())
+                .message(ex.getReason())
+                .build();
+
+        return ResponseEntity.status(status).body(response);
+    }
+
 }

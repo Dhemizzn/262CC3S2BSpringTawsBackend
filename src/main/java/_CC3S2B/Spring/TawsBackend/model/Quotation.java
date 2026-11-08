@@ -54,4 +54,13 @@ public class Quotation {
     @Column(name = "itinerary", columnDefinition = "jsonb")
     @ColumnTransformer(read = "itinerary::text", write = "CAST(? AS jsonb)")
     private String itinerary;
+
+    @Column(name = "mp_order_id", length = 80)
+    private String mpOrderId;
+
+    @Column(name = "mp_checkout_url", columnDefinition = "text")
+    private String mpCheckoutUrl;
+
+    @Column(name = "mp_idempotency_key", length = 36)
+    private String mpIdempotencyKey;
 }

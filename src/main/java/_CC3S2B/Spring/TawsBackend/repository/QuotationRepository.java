@@ -6,14 +6,20 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface QuotationRepository extends JpaRepository<Quotation, Integer> {
+
     @Query(value = """
         SELECT quotation_id
         FROM taws.quotation
         WHERE num_id = :numId
         """, nativeQuery = true)
-    String findGeneratedQuotationId(
-            @Param("numId") Integer numId
+    String findGeneratedQuotationId(@Param("numId") Integer numId);
+
+    Optional<Quotation> findByQuotationIdAndAppUserId(
+            String quotationId,
+            Integer appUserId
     );
 }
