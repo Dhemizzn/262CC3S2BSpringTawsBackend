@@ -1,5 +1,4 @@
 package _CC3S2B.Spring.TawsBackend.config;
-
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.info.Info;
@@ -14,6 +13,7 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI tawsApi() {
+
         String jwt = "jwtAuth";
 
         return new OpenAPI()

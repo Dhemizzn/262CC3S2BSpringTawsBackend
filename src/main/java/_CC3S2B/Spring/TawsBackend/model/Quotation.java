@@ -1,14 +1,12 @@
 package _CC3S2B.Spring.TawsBackend.model;
 
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Data;
 import org.hibernate.annotations.ColumnTransformer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Builder
 @Entity
 @Data
 @Table(name = "quotation", schema = "taws")

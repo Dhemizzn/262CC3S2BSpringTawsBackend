@@ -26,9 +26,10 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final ModuleRepository moduleRepository;
-    private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtService;
+    private final RolRepository rolRepository;
+
 
     public AuthResponseDTO login(LoginRequestDTO request){
         if(!userRepository.existsByEmail(request.getUsername())){
