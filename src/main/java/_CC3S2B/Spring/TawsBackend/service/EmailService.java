@@ -36,7 +36,7 @@ public class EmailService {
                 Tu cuenta ha sido creada correctamente.
 
                 Tus credenciales de acceso son:
-
+                Usuario: %s
                 Contraseña temporal: %s
 
                 Por seguridad, te recomendamos cambiar tu contraseña después de iniciar sesión.
