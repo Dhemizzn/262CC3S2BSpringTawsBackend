@@ -29,6 +29,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtService;
     private final RolRepository rolRepository;
+    private final EmailService emailService;
 
 
     public AuthResponseDTO login(LoginRequestDTO request){
@@ -64,7 +65,6 @@ public class AuthService {
         personRepository.save(person);
 
         String temporaryPassword = generatePassword();
-        System.out.println("Contraseña temporal: " + temporaryPassword);
         String hashedPassword = passwordEncoder.encode(temporaryPassword);
 
         User user = User.builder()
@@ -74,6 +74,11 @@ public class AuthService {
                 .rol(rolRepository.findById(2).orElse(null))
                 .build();
         userRepository.save(user);
+        emailService.sendWelcomeEmail(
+                user.getEmail(),
+                person.getFirstName(),
+                temporaryPassword
+        );
 
         List<Module> modules = Collections.emptyList();
 
