@@ -36,10 +36,12 @@ public class EmailService {
                 Tu cuenta ha sido creada correctamente.
 
                 Tus credenciales de acceso son:
-                Usuario: %s
+
+                Correo: %s
                 Contraseña temporal: %s
 
-                Por seguridad, te recomendamos cambiar tu contraseña después de iniciar sesión.
+                Por seguridad, te recomendamos cambiar tu contraseña
+                después de iniciar sesión.
 
                 ¡Gracias por formar parte de TAWS!
 
