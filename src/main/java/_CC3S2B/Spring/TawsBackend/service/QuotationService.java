@@ -34,6 +34,23 @@ public class QuotationService {
         return destinations.findAllByOrderByNameAsc();
     }
 
+    public List<Quotation> getUserQuotations(Integer userId) {
+        return quotations.findByAppUserIdOrderByNumIdDesc(userId);
+    }
+
+    @Transactional
+    public void cancelQuotation(String quotationId, Integer userId) {
+        if (quotationId == null || quotationId.isBlank() || userId == null) {
+            throw error(HttpStatus.BAD_REQUEST, "Parámetros inválidos");
+        }
+        Quotation q = quotations.findByQuotationIdAndAppUserId(quotationId.trim(), userId)
+                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Cotización " + quotationId + " no encontrada"));
+        if (!"pending".equalsIgnoreCase(q.getStatus())) {
+            throw error(HttpStatus.BAD_REQUEST, "Solo se pueden cancelar cotizaciones en estado pendiente");
+        }
+        quotations.delete(q);
+    }
+
     @Transactional(readOnly = true)
     public List<QuoteResponse> generate(QuoteRequest request) {
         int days = validateDates(request.departureDate(), request.returnDate());

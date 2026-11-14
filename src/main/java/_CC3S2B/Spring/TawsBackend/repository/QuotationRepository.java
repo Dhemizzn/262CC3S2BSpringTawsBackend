@@ -22,4 +22,6 @@ public interface QuotationRepository extends JpaRepository<Quotation, Integer> {
             String quotationId,
             Integer appUserId
     );
+
+    java.util.List<Quotation> findByAppUserIdOrderByNumIdDesc(Integer appUserId);
 }

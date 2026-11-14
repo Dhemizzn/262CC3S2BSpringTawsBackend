@@ -2,6 +2,8 @@ package _CC3S2B.Spring.TawsBackend.controller;
 
 import _CC3S2B.Spring.TawsBackend.dto.QuoteRequest;
 import _CC3S2B.Spring.TawsBackend.dto.QuoteResponse;
+import _CC3S2B.Spring.TawsBackend.model.Destination;
+import _CC3S2B.Spring.TawsBackend.model.Quotation;
 import _CC3S2B.Spring.TawsBackend.model.User;
 import _CC3S2B.Spring.TawsBackend.service.QuotationService;
 import jakarta.validation.Valid;
@@ -20,6 +22,26 @@ import java.util.Map;
 public class QuotationController {
 
     private final QuotationService quotationService;
+
+    @GetMapping("/destinations")
+    public List<Destination> getDestinations() {
+        return quotationService.destinations();
+    }
+
+    @GetMapping("/my-packages")
+    public List<Quotation> getMyPackages(Authentication authentication) {
+        Integer userId = authenticated(authentication);
+        return quotationService.getUserQuotations(userId);
+    }
+
+    @DeleteMapping("/{quotationId}")
+    public Map<String, String> cancelQuotation(
+            @PathVariable String quotationId,
+            Authentication authentication) {
+        Integer userId = authenticated(authentication);
+        quotationService.cancelQuotation(quotationId, userId);
+        return Map.of("message", "Cotización eliminada correctamente");
+    }
 
     @PostMapping("/generate")
     public List<QuoteResponse> generate(@Valid @RequestBody QuoteRequest request) {
