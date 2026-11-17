@@ -1,6 +1,9 @@
 
 package _CC3S2B.Spring.TawsBackend.controller;
 
+import _CC3S2B.Spring.TawsBackend.dto.CheckoutRequest;
+import _CC3S2B.Spring.TawsBackend.dto.CheckoutResponse;
+import _CC3S2B.Spring.TawsBackend.dto.PaymentStatusResponse;
 import _CC3S2B.Spring.TawsBackend.model.User;
 import _CC3S2B.Spring.TawsBackend.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +20,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/checkout")
-    public PaymentService.CheckoutResponse createCheckout(
-            @RequestBody CheckoutRequest request,
-            @AuthenticationPrincipal User user
-    ) {
+    public CheckoutResponse createCheckout(@RequestBody CheckoutRequest request, @AuthenticationPrincipal User user) {
         return paymentService.createCheckout(
                 quotationId(request),
                 userId(user)
@@ -28,10 +28,7 @@ public class PaymentController {
     }
 
     @PostMapping("/verify")
-    public PaymentService.PaymentStatusResponse verifyPayment(
-            @RequestBody CheckoutRequest request,
-            @AuthenticationPrincipal User user
-    ) {
+    public PaymentStatusResponse verifyPayment(@RequestBody CheckoutRequest request, @AuthenticationPrincipal User user) {
         return paymentService.verifyPayment(
                 quotationId(request),
                 userId(user)
@@ -60,6 +57,4 @@ public class PaymentController {
 
         return request.quotationId();
     }
-
-    public record CheckoutRequest(String quotationId) {}
 }

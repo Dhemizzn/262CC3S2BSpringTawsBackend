@@ -1,8 +1,11 @@
 
 package _CC3S2B.Spring.TawsBackend.service;
 
+import _CC3S2B.Spring.TawsBackend.dto.CheckoutResponse;
+import _CC3S2B.Spring.TawsBackend.dto.PaymentStatusResponse;
 import _CC3S2B.Spring.TawsBackend.model.Quotation;
 import _CC3S2B.Spring.TawsBackend.repository.QuotationRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,21 +20,13 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class PaymentService {
 
     private final QuotationRepository quotationRepository;
-    private final String accessToken;
-
-    private final RestClient restClient =
-            RestClient.create("https://api.mercadopago.com");
-
-    public PaymentService(
-            QuotationRepository quotationRepository,
-            @Value("${mercadopago.access-token}") String accessToken
-    ) {
-        this.quotationRepository = quotationRepository;
-        this.accessToken = accessToken;
-    }
+    @Value("${mercadopago.access-token}")
+    private String accessToken;
+    private final RestClient restClient = RestClient.create("https://api.mercadopago.com");
 
     public CheckoutResponse createCheckout(String quotationId, Integer userId) {
 
@@ -45,10 +40,10 @@ public class PaymentService {
 
         if (quotation.getMpOrderId() != null &&
                 quotation.getMpCheckoutUrl() != null) {
-            return new CheckoutResponse(
-                    quotation.getMpOrderId(),
-                    quotation.getMpCheckoutUrl()
-            );
+            return CheckoutResponse.builder()
+                    .orderId(quotation.getMpOrderId())
+                    .checkoutUrl(quotation.getMpCheckoutUrl())
+                    .build();
         }
 
         String idempotencyKey = quotation.getMpIdempotencyKey();
@@ -105,7 +100,10 @@ public class PaymentService {
         quotation.setMpCheckoutUrl(checkoutUrl);
         quotationRepository.save(quotation);
 
-        return new CheckoutResponse(orderId, checkoutUrl);
+        return CheckoutResponse.builder()
+                .orderId(orderId)
+                .checkoutUrl(checkoutUrl)
+                .build();
     }
 
     public PaymentStatusResponse verifyPayment(String quotationId, Integer userId) {
@@ -113,7 +111,9 @@ public class PaymentService {
         Quotation quotation = findQuotation(quotationId, userId);
 
         if ("paid".equals(quotation.getStatus())) {
-            return new PaymentStatusResponse("paid");
+            return PaymentStatusResponse.builder()
+                    .status("paid")
+                    .build();
         }
 
         if (!"pending".equals(quotation.getStatus()) ||
@@ -165,7 +165,9 @@ public class PaymentService {
             quotationRepository.save(quotation);
         }
 
-        return new PaymentStatusResponse(quotation.getStatus());
+        return PaymentStatusResponse.builder()
+                .status(quotation.getStatus())
+                .build();
     }
 
     private Quotation findQuotation(String quotationId, Integer userId) {
@@ -191,10 +193,4 @@ public class PaymentService {
         }
     }
 
-    public record CheckoutResponse(
-            String orderId,
-            String checkoutUrl
-    ) {}
-
-    public record PaymentStatusResponse(String status) {}
 }

@@ -1,6 +1,5 @@
 package _CC3S2B.Spring.TawsBackend.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -25,36 +24,36 @@ public class EmailService {
     }
 
     public void sendWelcomeEmail(String recipient, String firstName, String temporaryPassword) {
-        Map<String, Object> body = Map.of(
-                "sender", Map.of("name", "TAWS", "email", senderEmail),
-                "to", List.of(Map.of("email", recipient)),
-                "subject", "¡Bienvenido a TAWS!",
-                "textContent", """
-                ¡Hola, %s!
+            Map<String, Object> body = Map.of(
+                    "sender", Map.of("name", "TAWS", "email", senderEmail),
+                    "to", List.of(Map.of("email", recipient)),
+                    "subject", "¡Bienvenido a TAWS!",
+                    "textContent", """
+                    ¡Hola, %s!
 
-                Te damos la bienvenida al sistema TAWS.
-                Tu cuenta ha sido creada correctamente.
+                    Te damos la bienvenida al sistema TAWS.
+                    Tu cuenta ha sido creada correctamente.
 
-                Tus credenciales de acceso son:
+                    Tus credenciales de acceso son:
 
-                Correo: %s
-                Contraseña temporal: %s
+                    Correo: %s
+                    Contraseña temporal: %s
 
-                Por seguridad, te recomendamos cambiar tu contraseña
-                después de iniciar sesión.
+                    Por seguridad, te recomendamos cambiar tu contraseña
+                    después de iniciar sesión.
 
-                ¡Gracias por formar parte de TAWS!
+                    ¡Gracias por formar parte de TAWS!
 
-                Equipo TAWS.
-                """.formatted(firstName, recipient, temporaryPassword)
-        );
+                    Equipo TAWS.
+                    """.formatted(firstName, recipient, temporaryPassword)
+            );
 
-        restClient.post()
-                .uri("/smtp/email")
-                .header("api-key", apiKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(body)
-                .retrieve()
-                .toBodilessEntity();
+            restClient.post()
+                    .uri("/smtp/email")
+                    .header("api-key", apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
     }
 }
