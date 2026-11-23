@@ -2,6 +2,7 @@ package _CC3S2B.Spring.TawsBackend.controller;
 
 import _CC3S2B.Spring.TawsBackend.dto.QuoteRequest;
 import _CC3S2B.Spring.TawsBackend.dto.QuoteResponse;
+import _CC3S2B.Spring.TawsBackend.dto.UserPackageResponse;
 import _CC3S2B.Spring.TawsBackend.model.Destination;
 import _CC3S2B.Spring.TawsBackend.model.Quotation;
 import _CC3S2B.Spring.TawsBackend.model.User;
@@ -29,7 +30,7 @@ public class QuotationController {
     }
 
     @GetMapping("/my-packages")
-    public List<Quotation> getMyPackages(Authentication authentication) {
+    public List<UserPackageResponse> getMyPackages(Authentication authentication) {
         Integer userId = authenticated(authentication);
         return quotationService.getUserQuotations(userId);
     }

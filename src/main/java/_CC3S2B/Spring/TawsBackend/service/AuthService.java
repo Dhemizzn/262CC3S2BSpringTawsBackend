@@ -4,9 +4,11 @@ import _CC3S2B.Spring.TawsBackend.audit.AuditService;
 import _CC3S2B.Spring.TawsBackend.dto.AuthResponseDTO;
 import _CC3S2B.Spring.TawsBackend.dto.LoginRequestDTO;
 import _CC3S2B.Spring.TawsBackend.dto.RegisterRequestDTO;
+import _CC3S2B.Spring.TawsBackend.model.Dni;
 import _CC3S2B.Spring.TawsBackend.model.Module;
 import _CC3S2B.Spring.TawsBackend.model.Person;
 import _CC3S2B.Spring.TawsBackend.model.User;
+import _CC3S2B.Spring.TawsBackend.repository.DniRepository;
 import _CC3S2B.Spring.TawsBackend.repository.ModuleRepository;
 import _CC3S2B.Spring.TawsBackend.repository.PersonRepository;
 import _CC3S2B.Spring.TawsBackend.repository.RolRepository;
@@ -31,6 +33,7 @@ public class AuthService {
     private final RolRepository rolRepository;
     private final EmailService emailService;
     private final AuditService auditService;
+    private final DniRepository dniRepository;
 
     public AuthResponseDTO login(LoginRequestDTO request){
         if(!userRepository.existsByEmail(request.getUsername())){
@@ -64,6 +67,16 @@ public class AuthService {
                 .build();
         personRepository.save(person);
         auditService.logCreate("taws", "person", person.getPersonId().toString(), "Usuarios");
+
+        if (request.getDni() != null && !request.getDni().isBlank()) {
+            String normalizedDni = request.getDni().replaceAll("\\s+", "");
+            if (normalizedDni.length() > 8) {
+                normalizedDni = normalizedDni.substring(0, 8);
+            }
+            if (!dniRepository.existsById(normalizedDni)) {
+                dniRepository.save(Dni.builder().dniNumber(normalizedDni).build());
+            }
+        }
 
         String temporaryPassword = generatePassword();
         String hashedPassword = passwordEncoder.encode(temporaryPassword);

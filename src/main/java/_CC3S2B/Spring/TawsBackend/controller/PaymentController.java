@@ -4,6 +4,7 @@ package _CC3S2B.Spring.TawsBackend.controller;
 import _CC3S2B.Spring.TawsBackend.dto.CheckoutRequest;
 import _CC3S2B.Spring.TawsBackend.dto.CheckoutResponse;
 import _CC3S2B.Spring.TawsBackend.dto.PaymentStatusResponse;
+import _CC3S2B.Spring.TawsBackend.model.Ruc;
 import _CC3S2B.Spring.TawsBackend.model.User;
 import _CC3S2B.Spring.TawsBackend.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class PaymentController {
     @PostMapping("/checkout")
     public CheckoutResponse createCheckout(@RequestBody CheckoutRequest request, @AuthenticationPrincipal User user) {
         return paymentService.createCheckout(
-                quotationId(request),
+                request,
                 userId(user)
         );
     }
@@ -30,9 +31,14 @@ public class PaymentController {
     @PostMapping("/verify")
     public PaymentStatusResponse verifyPayment(@RequestBody CheckoutRequest request, @AuthenticationPrincipal User user) {
         return paymentService.verifyPayment(
-                quotationId(request),
+                request,
                 userId(user)
         );
+    }
+
+    @GetMapping("/ruc/{rucNumber}")
+    public Ruc getRuc(@PathVariable String rucNumber) {
+        return paymentService.findRuc(rucNumber);
     }
 
     private Integer userId(User user) {

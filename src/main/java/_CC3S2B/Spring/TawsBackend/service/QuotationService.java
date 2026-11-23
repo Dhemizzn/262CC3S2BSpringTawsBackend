@@ -29,6 +29,9 @@ public class QuotationService {
     private final HotelRepository hotels;
     private final QuoteActivityRepository activities;
     private final QuotationRepository quotations;
+    private final TransactionRepository transactions;
+    private final ReceiptRepository receipts;
+    private final InvoiceRepository invoices;
     private final JsonMapper jsonMapper;
     private final AuditService auditService;
 
@@ -36,8 +39,57 @@ public class QuotationService {
         return destinations.findAllByOrderByNameAsc();
     }
 
-    public List<Quotation> getUserQuotations(Integer userId) {
-        return quotations.findByAppUserIdOrderByNumIdDesc(userId);
+    public List<UserPackageResponse> getUserQuotations(Integer userId) {
+        List<Quotation> userQuotes = quotations.findByAppUserIdOrderByNumIdDesc(userId);
+        return userQuotes.stream().map(this::mapToUserPackageResponse).toList();
+    }
+
+    private UserPackageResponse mapToUserPackageResponse(Quotation q) {
+        UserPackageResponse.UserPackageResponseBuilder builder = UserPackageResponse.builder()
+                .numId(q.getNumId())
+                .quotationId(q.getQuotationId())
+                .status(q.getStatus())
+                .peopleQuantity(q.getPeopleQuantity())
+                .departureRegion(q.getDepartureRegion())
+                .destinationRegion(q.getDestinationRegion())
+                .departureDate(q.getDepartureDate())
+                .returnDate(q.getReturnDate())
+                .departureTime(q.getDepartureTime())
+                .returnTime(q.getReturnTime())
+                .total(q.getTotal())
+                .appUserId(q.getAppUserId())
+                .itinerary(q.getItinerary())
+                .mpOrderId(q.getMpOrderId())
+                .mpCheckoutUrl(q.getMpCheckoutUrl())
+                .mpIdempotencyKey(q.getMpIdempotencyKey());
+
+        if (q.getQuotationId() != null) {
+            Optional<Transaction> txOpt = transactions.findByQuotationId(q.getQuotationId());
+            if (txOpt.isPresent()) {
+                Transaction tx = txOpt.get();
+                builder.transactionId(tx.getTransactionId())
+                        .transactionDate(tx.getDate());
+
+                Optional<Invoice> invOpt = invoices.findByTransaction_TransactionId(tx.getTransactionId());
+                if (invOpt.isPresent()) {
+                    Invoice inv = invOpt.get();
+                    builder.receiptType("factura")
+                            .documentNumber(inv.getInvoiceNumber())
+                            .ruc(inv.getRuc())
+                            .businessName(inv.getBusinessName())
+                            .fiscalAddress(inv.getFiscalAddress());
+                } else {
+                    Optional<Receipt> recOpt = receipts.findByTransaction_TransactionId(tx.getTransactionId());
+                    if (recOpt.isPresent()) {
+                        Receipt rec = recOpt.get();
+                        builder.receiptType("boleta")
+                                .documentNumber(rec.getReceiptNumber());
+                    }
+                }
+            }
+        }
+
+        return builder.build();
     }
 
     @Transactional
