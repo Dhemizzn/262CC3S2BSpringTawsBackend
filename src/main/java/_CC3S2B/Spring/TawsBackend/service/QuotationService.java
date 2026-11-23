@@ -1,5 +1,6 @@
 package _CC3S2B.Spring.TawsBackend.service;
 
+import _CC3S2B.Spring.TawsBackend.audit.AuditService;
 import _CC3S2B.Spring.TawsBackend.dto.*;
 import _CC3S2B.Spring.TawsBackend.model.*;
 import _CC3S2B.Spring.TawsBackend.repository.*;
@@ -29,6 +30,7 @@ public class QuotationService {
     private final QuoteActivityRepository activities;
     private final QuotationRepository quotations;
     private final JsonMapper jsonMapper;
+    private final AuditService auditService;
 
     public List<Destination> destinations() {
         return destinations.findAllByOrderByNameAsc();
@@ -49,6 +51,7 @@ public class QuotationService {
             throw error(HttpStatus.BAD_REQUEST, "Solo se pueden cancelar cotizaciones en estado pendiente");
         }
         quotations.delete(q);
+        auditService.logDelete("taws", "quotation", quotationId, "Cotizaciones", q);
     }
 
     @Transactional(readOnly = true)
@@ -176,6 +179,7 @@ public class QuotationService {
         if (quotationId == null) {
             throw new IllegalStateException("Neon no devolvio quotation_id");
         }
+        auditService.logCreate("taws", "quotation", quotationId, "Cotizaciones");
         return quotationId;
     }
 

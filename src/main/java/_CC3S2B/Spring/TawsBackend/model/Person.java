@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @Table(name = "Person")
-
 public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,4 +48,23 @@ public class Person {
     @Builder.Default
     @Column(name = "updated_at", nullable = true)
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    /**
+     * Constructor de copia para crear un snapshot desconectado del contexto de persistencia.
+     * Se usa para capturar el estado anterior antes de un UPDATE o DELETE.
+     */
+    public Person(Person source) {
+        if (source != null) {
+            this.personId = source.personId;
+            this.firstName = source.firstName;
+            this.paternalSurname = source.paternalSurname;
+            this.maternalSurname = source.maternalSurname;
+            this.dni = source.dni;
+            this.phone = source.phone;
+            this.direction = source.direction;
+            this.email = source.email;
+            this.createdAt = source.createdAt;
+            this.updatedAt = source.updatedAt;
+        }
+    }
 }

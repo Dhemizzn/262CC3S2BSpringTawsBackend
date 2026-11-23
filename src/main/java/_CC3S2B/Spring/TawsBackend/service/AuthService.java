@@ -1,11 +1,11 @@
 package _CC3S2B.Spring.TawsBackend.service;
 
+import _CC3S2B.Spring.TawsBackend.audit.AuditService;
 import _CC3S2B.Spring.TawsBackend.dto.AuthResponseDTO;
 import _CC3S2B.Spring.TawsBackend.dto.LoginRequestDTO;
 import _CC3S2B.Spring.TawsBackend.dto.RegisterRequestDTO;
 import _CC3S2B.Spring.TawsBackend.model.Module;
 import _CC3S2B.Spring.TawsBackend.model.Person;
-
 import _CC3S2B.Spring.TawsBackend.model.User;
 import _CC3S2B.Spring.TawsBackend.repository.ModuleRepository;
 import _CC3S2B.Spring.TawsBackend.repository.PersonRepository;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor // Genera un constructor para los atributos que son final
+@RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
@@ -30,7 +30,7 @@ public class AuthService {
     private final JwtUtil jwtService;
     private final RolRepository rolRepository;
     private final EmailService emailService;
-
+    private final AuditService auditService;
 
     public AuthResponseDTO login(LoginRequestDTO request){
         if(!userRepository.existsByEmail(request.getUsername())){
@@ -63,6 +63,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .build();
         personRepository.save(person);
+        auditService.logCreate("taws", "person", person.getPersonId().toString(), "Usuarios");
 
         String temporaryPassword = generatePassword();
         String hashedPassword = passwordEncoder.encode(temporaryPassword);
@@ -74,6 +75,7 @@ public class AuthService {
                 .rol(rolRepository.findById(2).orElse(null))
                 .build();
         userRepository.save(user);
+        auditService.logCreate("taws", "app_user", user.getUserId().toString(), "Usuarios");
         emailService.sendWelcomeEmail(
                 user.getEmail(),
                 person.getFirstName(),
