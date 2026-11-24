@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Persistable;
 
 @Entity
 @Data
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @Table(name = "invoice", schema = "taws")
-public class Invoice {
+public class Invoice implements Persistable<Long> {
 
     @Id
     @Column(name = "transaction_id")
@@ -34,4 +35,24 @@ public class Invoice {
 
     @Column(name = "fiscal_address", length = 255, nullable = false)
     private String fiscalAddress;
+
+    @Transient
+    @Builder.Default
+    private boolean isNew = true;
+
+    @Override
+    public Long getId() {
+        return transactionId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PrePersist
+    void markNotNew() {
+        this.isNew = false;
+    }
 }

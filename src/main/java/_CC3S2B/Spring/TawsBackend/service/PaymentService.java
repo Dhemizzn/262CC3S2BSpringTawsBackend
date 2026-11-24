@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.UUID;
 public class PaymentService {
 
     private final QuotationRepository quotationRepository;
+    private final UserRepository userRepository;
     private final RucRepository rucRepository;
     private final DniRepository dniRepository;
     private final TransactionRepository transactionRepository;
@@ -223,12 +225,30 @@ public class PaymentService {
                 String fiscalAddress = (String) billingInfo.get("fiscalAddress");
 
                 if (ruc != null && !ruc.isBlank()) {
-                    Ruc rucEntity = Ruc.builder()
-                            .rucNumber(ruc.trim())
-                            .businessName(businessName != null ? businessName.trim() : "")
-                            .fiscalAddress(fiscalAddress != null ? fiscalAddress.trim() : "")
-                            .build();
-                    rucRepository.save(rucEntity);
+                    String cleanRuc = ruc.trim();
+                    Integer userId = quotation.getAppUserId();
+                    if (userId != null) {
+                        Optional<Ruc> existingRucOpt = rucRepository.findByUser_UserIdAndRucNumber(userId, cleanRuc);
+                        if (existingRucOpt.isPresent()) {
+                            Ruc existingRuc = existingRucOpt.get();
+                            existingRuc.setBusinessName(businessName != null ? businessName.trim() : "");
+                            existingRuc.setFiscalAddress(fiscalAddress != null ? fiscalAddress.trim() : "");
+                            existingRuc.setUpdatedAt(LocalDateTime.now());
+                            rucRepository.save(existingRuc);
+                        } else {
+                            User user = userRepository.findById(userId).orElse(null);
+                            if (user != null) {
+                                Ruc newRuc = Ruc.builder()
+                                        .user(user)
+                                        .rucNumber(cleanRuc)
+                                        .businessName(businessName != null ? businessName.trim() : "")
+                                        .fiscalAddress(fiscalAddress != null ? fiscalAddress.trim() : "")
+                                        .updatedAt(LocalDateTime.now())
+                                        .build();
+                                rucRepository.save(newRuc);
+                            }
+                        }
+                    }
                 }
 
                 String nextInvoiceNumber = generateNextInvoiceNumber();
@@ -239,6 +259,7 @@ public class PaymentService {
                         .ruc(ruc != null ? ruc.trim() : "")
                         .businessName(businessName != null ? businessName.trim() : "")
                         .fiscalAddress(fiscalAddress != null ? fiscalAddress.trim() : "")
+                        .isNew(true)
                         .build();
                 invoiceRepository.save(invoice);
             }
@@ -259,6 +280,7 @@ public class PaymentService {
                         .transactionId(transaction.getTransactionId())
                         .transaction(transaction)
                         .receiptNumber(nextReceiptNumber)
+                        .isNew(true)
                         .build();
                 receiptRepository.save(receipt);
             }
@@ -401,8 +423,16 @@ public class PaymentService {
         if (rucNumber == null || rucNumber.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El RUC es obligatorio");
         }
-        return rucRepository.findById(rucNumber.trim())
+        return rucRepository.findFirstByRucNumberOrderByUpdatedAtDesc(rucNumber.trim())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "RUC no encontrado"));
+    }
+
+    public Ruc getLastRuc(Integer userId) {
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Inicia sesión");
+        }
+        return rucRepository.findFirstByUser_UserIdOrderByUpdatedAtDesc(userId)
+                .orElse(null);
     }
 
     private String validateQuotationId(CheckoutRequest request) {

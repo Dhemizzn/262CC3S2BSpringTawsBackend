@@ -41,6 +41,11 @@ public class PaymentController {
         return paymentService.findRuc(rucNumber);
     }
 
+    @GetMapping("/last-ruc")
+    public Ruc getLastRuc(@AuthenticationPrincipal User user) {
+        return paymentService.getLastRuc(userId(user));
+    }
+
     private Integer userId(User user) {
         if (user == null) {
             throw new ResponseStatusException(
