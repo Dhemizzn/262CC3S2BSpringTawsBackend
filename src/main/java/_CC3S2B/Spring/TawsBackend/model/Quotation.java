@@ -1,7 +1,10 @@
 package _CC3S2B.Spring.TawsBackend.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnTransformer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -9,6 +12,9 @@ import java.time.LocalTime;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "quotation", schema = "taws")
 public class Quotation {
     @Id
@@ -61,4 +67,25 @@ public class Quotation {
 
     @Column(name = "mp_idempotency_key", length = 36)
     private String mpIdempotencyKey;
+
+    public Quotation(Quotation source) {
+        if (source != null) {
+            this.numId = source.numId;
+            this.quotationId = source.quotationId;
+            this.status = source.status;
+            this.peopleQuantity = source.peopleQuantity;
+            this.departureRegion = source.departureRegion;
+            this.destinationRegion = source.destinationRegion;
+            this.departureDate = source.departureDate;
+            this.returnDate = source.returnDate;
+            this.departureTime = source.departureTime;
+            this.returnTime = source.returnTime;
+            this.total = source.total;
+            this.appUserId = source.appUserId;
+            this.itinerary = source.itinerary;
+            this.mpOrderId = source.mpOrderId;
+            this.mpCheckoutUrl = source.mpCheckoutUrl;
+            this.mpIdempotencyKey = source.mpIdempotencyKey;
+        }
+    }
 }

@@ -4,6 +4,12 @@ import _CC3S2B.Spring.TawsBackend.model.audit.AuditChange;
 import _CC3S2B.Spring.TawsBackend.model.audit.AuditEvent;
 import _CC3S2B.Spring.TawsBackend.repository.audit.AuditChangeRepository;
 import _CC3S2B.Spring.TawsBackend.repository.audit.AuditEventRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +19,16 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -25,14 +38,17 @@ public class AuditService {
 
     private final AuditEventRepository auditEventRepository;
     private final AuditChangeRepository auditChangeRepository;
+    private final ObjectMapper objectMapper;
 
     @Autowired(required = false)
     private HttpServletResponse httpResponse;
 
     public AuditService(AuditEventRepository auditEventRepository,
-                        AuditChangeRepository auditChangeRepository) {
+                        AuditChangeRepository auditChangeRepository,
+                        ObjectMapper objectMapper) {
         this.auditEventRepository = auditEventRepository;
         this.auditChangeRepository = auditChangeRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -73,7 +89,7 @@ public class AuditService {
         return AuditEvent.builder()
                 .schemaName(schema)
                 .tableName(table)
-                .recordId(recordId)
+                .recordId(recordId != null ? recordId : "0")
                 .module(module)
                 .operation(operation)
                 .eventDate(OffsetDateTime.now())
@@ -96,16 +112,21 @@ public class AuditService {
         Class<?> clazz = oldState.getClass();
         while (clazz != null && clazz != Object.class) {
             for (Field field : clazz.getDeclaredFields()) {
+                if (shouldIgnoreField(field)) {
+                    continue;
+                }
                 field.setAccessible(true);
                 try {
                     Object va = field.get(oldState);
                     Object vn = field.get(newState);
-                    if (!Objects.equals(va, vn)) {
+                    String strA = serializeValue(va);
+                    String strB = serializeValue(vn);
+                    if (!Objects.equals(strA, strB)) {
                         changes.add(AuditChange.builder()
                                 .event(event)
                                 .fieldName(field.getName())
-                                .oldValue(toStr(va))
-                                .newValue(toStr(vn))
+                                .oldValue(strA)
+                                .newValue(strB)
                                 .build());
                     }
                 } catch (IllegalAccessException e) {
@@ -125,12 +146,15 @@ public class AuditService {
         Class<?> clazz = state.getClass();
         while (clazz != null && clazz != Object.class) {
             for (Field field : clazz.getDeclaredFields()) {
+                if (shouldIgnoreField(field)) {
+                    continue;
+                }
                 field.setAccessible(true);
                 try {
                     changes.add(AuditChange.builder()
                             .event(event)
                             .fieldName(field.getName())
-                            .oldValue(toStr(field.get(state)))
+                            .oldValue(serializeValue(field.get(state)))
                             .newValue(null)
                             .build());
                 } catch (IllegalAccessException e) {
@@ -142,8 +166,54 @@ public class AuditService {
         return changes;
     }
 
-    private String toStr(Object obj) {
-        return obj == null ? null : obj.toString();
+    private boolean shouldIgnoreField(Field field) {
+        int mod = field.getModifiers();
+        if (Modifier.isStatic(mod) || Modifier.isTransient(mod)) {
+            return true;
+        }
+        return field.isAnnotationPresent(ManyToOne.class) ||
+                field.isAnnotationPresent(OneToMany.class) ||
+                field.isAnnotationPresent(ManyToMany.class) ||
+                field.isAnnotationPresent(OneToOne.class);
+    }
+
+    private String serializeValue(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof String s) {
+            return s;
+        }
+        if (obj instanceof Number || obj instanceof Boolean) {
+            if (obj instanceof BigDecimal bd) {
+                return bd.stripTrailingZeros().toPlainString();
+            }
+            return obj.toString();
+        }
+        if (obj instanceof LocalDate ld) {
+            return ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        }
+        if (obj instanceof LocalTime lt) {
+            return lt.format(DateTimeFormatter.ISO_LOCAL_TIME);
+        }
+        if (obj instanceof LocalDateTime ldt) {
+            return ldt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        }
+        if (obj instanceof OffsetDateTime odt) {
+            return odt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        }
+        if (obj instanceof Map<?, ?> || obj instanceof Iterable<?>) {
+            try {
+                return objectMapper.writeValueAsString(obj);
+            } catch (JsonProcessingException e) {
+                return obj.toString();
+            }
+        }
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            return obj.toString();
+        }
     }
 
     private long nullSafeLong(Long value) {

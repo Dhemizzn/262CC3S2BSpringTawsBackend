@@ -43,4 +43,15 @@ public class Ruc {
     @Column(name = "updated_at")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public Ruc(Ruc source) {
+        if (source != null) {
+            this.rucId = source.rucId;
+            this.user = source.user;
+            this.rucNumber = source.rucNumber;
+            this.fiscalAddress = source.fiscalAddress;
+            this.businessName = source.businessName;
+            this.updatedAt = source.updatedAt;
+        }
+    }
 }

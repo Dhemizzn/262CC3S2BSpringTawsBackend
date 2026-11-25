@@ -1,5 +1,6 @@
 package _CC3S2B.Spring.TawsBackend.service;
 
+import _CC3S2B.Spring.TawsBackend.audit.AuditService;
 import _CC3S2B.Spring.TawsBackend.dto.CheckoutRequest;
 import _CC3S2B.Spring.TawsBackend.dto.CheckoutResponse;
 import _CC3S2B.Spring.TawsBackend.dto.PaymentStatusResponse;
@@ -37,6 +38,7 @@ public class PaymentService {
     private final TransactionRepository transactionRepository;
     private final ReceiptRepository receiptRepository;
     private final InvoiceRepository invoiceRepository;
+    private final AuditService auditService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -115,9 +117,11 @@ public class PaymentService {
             );
         }
 
+        Quotation snapshot = new Quotation(quotation);
         quotation.setMpOrderId(orderId);
         quotation.setMpCheckoutUrl(checkoutUrl);
         quotationRepository.save(quotation);
+        auditService.logUpdate("taws", "quotation", String.valueOf(quotation.getNumId()), "Cotizaciones", snapshot, quotation);
 
         return CheckoutResponse.builder()
                 .orderId(orderId)
@@ -185,8 +189,10 @@ public class PaymentService {
                 );
             }
 
+            Quotation snapshot = new Quotation(quotation);
             quotation.setStatus("paid");
             quotationRepository.save(quotation);
+            auditService.logUpdate("taws", "quotation", String.valueOf(quotation.getNumId()), "Cotizaciones", snapshot, quotation);
 
             processReceiptGeneration(quotation);
 
@@ -211,7 +217,9 @@ public class PaymentService {
                             .quotationId(quotation.getQuotationId())
                             .packageId(quotation.getQuotationId().length() <= 9 ? quotation.getQuotationId() : quotation.getQuotationId().substring(0, 9))
                             .build();
-                    return transactionRepository.saveAndFlush(newTx);
+                    Transaction savedTx = transactionRepository.saveAndFlush(newTx);
+                    auditService.logCreate("taws", "transaction", String.valueOf(savedTx.getTransactionId()), "Pagos");
+                    return savedTx;
                 });
 
         Map<String, Object> billingInfo = extractBillingInfo(quotation);
@@ -231,10 +239,12 @@ public class PaymentService {
                         Optional<Ruc> existingRucOpt = rucRepository.findByUser_UserIdAndRucNumber(userId, cleanRuc);
                         if (existingRucOpt.isPresent()) {
                             Ruc existingRuc = existingRucOpt.get();
+                            Ruc rucSnapshot = new Ruc(existingRuc);
                             existingRuc.setBusinessName(businessName != null ? businessName.trim() : "");
                             existingRuc.setFiscalAddress(fiscalAddress != null ? fiscalAddress.trim() : "");
                             existingRuc.setUpdatedAt(LocalDateTime.now());
                             rucRepository.save(existingRuc);
+                            auditService.logUpdate("taws", "ruc", String.valueOf(existingRuc.getRucId()), "Facturacion", rucSnapshot, existingRuc);
                         } else {
                             User user = userRepository.findById(userId).orElse(null);
                             if (user != null) {
@@ -245,7 +255,8 @@ public class PaymentService {
                                         .fiscalAddress(fiscalAddress != null ? fiscalAddress.trim() : "")
                                         .updatedAt(LocalDateTime.now())
                                         .build();
-                                rucRepository.save(newRuc);
+                                Ruc savedRuc = rucRepository.save(newRuc);
+                                auditService.logCreate("taws", "ruc", String.valueOf(savedRuc.getRucId()), "Facturacion");
                             }
                         }
                     }
@@ -262,6 +273,7 @@ public class PaymentService {
                         .isNew(true)
                         .build();
                 invoiceRepository.save(invoice);
+                auditService.logCreate("taws", "invoice", String.valueOf(invoice.getTransactionId()), "Facturacion");
             }
         } else {
             Optional<Receipt> existingReceipt = receiptRepository.findByTransaction_TransactionId(transaction.getTransactionId());
@@ -283,6 +295,7 @@ public class PaymentService {
                         .isNew(true)
                         .build();
                 receiptRepository.save(receipt);
+                auditService.logCreate("taws", "receipt", String.valueOf(receipt.getTransactionId()), "Facturacion");
             }
         }
     }

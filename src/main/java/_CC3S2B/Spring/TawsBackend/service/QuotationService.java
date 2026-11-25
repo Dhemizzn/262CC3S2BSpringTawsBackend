@@ -103,7 +103,7 @@ public class QuotationService {
             throw error(HttpStatus.BAD_REQUEST, "Solo se pueden cancelar cotizaciones en estado pendiente");
         }
         quotations.delete(q);
-        auditService.logDelete("taws", "quotation", quotationId, "Cotizaciones", q);
+        auditService.logDelete("taws", "quotation", String.valueOf(q.getNumId()), "Cotizaciones", q);
     }
 
     @Transactional(readOnly = true)
@@ -231,7 +231,8 @@ public class QuotationService {
         if (quotationId == null) {
             throw new IllegalStateException("Neon no devolvio quotation_id");
         }
-        auditService.logCreate("taws", "quotation", quotationId, "Cotizaciones");
+        saved.setQuotationId(quotationId);
+        auditService.logCreate("taws", "quotation", String.valueOf(saved.getNumId()), "Cotizaciones");
         return quotationId;
     }
 
