@@ -14,7 +14,6 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserPackageResponse {
-    // Campos originales de Quotation
     private Integer numId;
     private String quotationId;
     private String status;
@@ -32,7 +31,6 @@ public class UserPackageResponse {
     private String mpCheckoutUrl;
     private String mpIdempotencyKey;
 
-    // Campos del comprobante emitido
     private Long transactionId;
     private String receiptType;
     private String documentNumber;

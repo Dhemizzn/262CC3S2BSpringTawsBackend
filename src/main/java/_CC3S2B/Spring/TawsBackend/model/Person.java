@@ -49,10 +49,6 @@ public class Person {
     @Column(name = "updated_at", nullable = true)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    /**
-     * Constructor de copia para crear un snapshot desconectado del contexto de persistencia.
-     * Se usa para capturar el estado anterior antes de un UPDATE o DELETE.
-     */
     public Person(Person source) {
         if (source != null) {
             this.personId = source.personId;

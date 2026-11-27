@@ -4,8 +4,9 @@ import _CC3S2B.Spring.TawsBackend.model.audit.AuditChange;
 import _CC3S2B.Spring.TawsBackend.model.audit.AuditEvent;
 import _CC3S2B.Spring.TawsBackend.repository.audit.AuditChangeRepository;
 import _CC3S2B.Spring.TawsBackend.repository.audit.AuditEventRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class AuditService {
 
     private static final Logger log = LoggerFactory.getLogger(AuditService.class);
@@ -42,14 +44,6 @@ public class AuditService {
 
     @Autowired(required = false)
     private HttpServletResponse httpResponse;
-
-    public AuditService(AuditEventRepository auditEventRepository,
-                        AuditChangeRepository auditChangeRepository,
-                        ObjectMapper objectMapper) {
-        this.auditEventRepository = auditEventRepository;
-        this.auditChangeRepository = auditChangeRepository;
-        this.objectMapper = objectMapper;
-    }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logCreate(String schema, String table, String recordId, String module) {
@@ -205,7 +199,7 @@ public class AuditService {
         if (obj instanceof Map<?, ?> || obj instanceof Iterable<?>) {
             try {
                 return objectMapper.writeValueAsString(obj);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 return obj.toString();
             }
         }
